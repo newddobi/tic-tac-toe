@@ -1,26 +1,27 @@
-import React from "react";
-import Board from "./Board";
-import {calculateWinner} from "../util/calculateWinner.js";
+import React, { useEffect, useReducer } from "react";
+import Board from "./Board.js";
+import { calculateWinner } from "../util/calculateWinner.js";
+import Status from "./Status.js";
+import Moves from "./Moves.js";
+import gameReducer from "../reducers/gameReducer.js";
 
-class Game extends React.Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            // 과거의 squares 배열을 histor 배열에 저장
-            // 이전 동작에 대한 리스트를 최상위인 Game에 저장
-            history: [
-                {
-                    squares: Array(9).fill(null),
-                },
-            ],
-            stepNumber: 0,
-            xIsNext: true,
-        };
-    }
+// hooks의 기능은 아님. 상위의 store 역할
+// 다른 컴포넌트에서 받아야 하기 때문에 export 사용
+export const GameContext = React.createContext();
 
-    handleClick(i) {
-        const history = this.state.history.slice(0, this.state.stepNumber + 1);
-        const current = history[this.state.stepNumber];
+const Game = () => {
+
+    const initData = {
+        history: [{ squares: Array(9).fill(null) }],
+        stepNumber: 0,
+        xIsNext: true,
+    };
+
+    const [games, dispatch] = useReducer(gameReducer, initData);
+
+    const handleClick = (i) => {
+        const newHistory = games.history.slice(0, games.stepNumber + 1);
+        const current = newHistory[games.stepNumber];
         // 기존 배열을 수정하지 않고 squares 배열의 복사본을 생성하여 수정하는것에 주의
         const squares = current.squares.slice();
 
@@ -29,66 +30,41 @@ class Game extends React.Component {
             return;
         }
 
-        squares[i] = this.state.xIsNext ? "X" : "O";
+        squares[i] = games.xIsNext ? "X" : "O";
 
-        this.setState({
-            history: history.concat(
-                [
-                    {
-                        squares: squares,
-                    }   
-                ]
-            ),
-            stepNumber: history.length,
-            xIsNext: !this.state.xIsNext,
-        });
-    }
-
-    jumpTo(step) {
-        this.setState({
-            stepNumber: step,
-            xIsNext: (step % 2) === 0,
-        });
-    }
+        dispatch({ type: "ADD_HISTORY", payload: newHistory.concat([{ squares: squares }]) });
+        dispatch({ type: "CHANGE_STEP_NUMBER", payload: newHistory.length });
+        dispatch({ type: "CHANGE_X_IS_NEXT", payload: !games.xIsNext });
+    };
 
     // 가장 최근 기록을 사용하도록 업데이트하여 게임의 상태를 확인하고 표시
-    render() {
-        const history = this.state.history;
-        const current = history[history.length - 1];
-        const winner = calculateWinner(current.squares);
+    const updatedHistory = games.history;
+    const current = updatedHistory[updatedHistory.length - 1];
+    const winner = calculateWinner(current.squares);
 
-        const moves = history.map((step, move) => {
-            const desc = move ?
-                "Go to move #" + move :
-                "Go to game start";
-            return (
-                <li key={move}>
-                    <button onClick={() => this.jumpTo(move)}>{ desc }</button>
-                </li>
-            );
-        });
+    // 렌더링 이후 작업
+    useEffect(() => {
+        console.log("새로운 내용이 렌더링 됐네요", games);
+    }, [games]);
 
-        let status;
-        if (winner) {
-            status = "Winner : " + winner;
-        } else {
-            status = "Next player : " + (this.state.xIsNext ? "X" : "O");
-        }
-        return (
+    return (
+        <GameContext.Provider
+            value={{ winner, games, updatedHistory, dispatch }}
+        >
             <div className="game">
                 <div className="game-board">
                     <Board
-                        squares = {current.squares}
-                        onClick = {(i) => this.handleClick(i)}
+                        squares={current.squares}
+                        onClick={(i) => handleClick(i)}
                     />
                 </div>
                 <div className="game-info">
-                    <div>{status}</div>
-                    <ol>{moves}</ol>
+                    <Status />
+                    <Moves />
                 </div>
             </div>
-        );
-    }
-}
+        </GameContext.Provider>
+    );
+};
 
 export default Game;
