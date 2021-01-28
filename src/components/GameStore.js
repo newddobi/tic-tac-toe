@@ -1,15 +1,13 @@
 import React, { useEffect, useReducer } from "react";
-import Board from "./Board.js";
 import { calculateWinner } from "../util/calculateWinner.js";
-import Status from "./Status.js";
-import Moves from "./Moves.js";
+
 import gameReducer from "../reducers/gameReducer.js";
 
 // hooks의 기능은 아님. 상위의 store 역할
 // 다른 컴포넌트에서 받아야 하기 때문에 export 사용
 export const GameContext = React.createContext();
 
-const Game = () => {
+const GameStore = (props) => {
 
     const initData = {
         history: [{ squares: Array(9).fill(null) }],
@@ -49,22 +47,11 @@ const Game = () => {
 
     return (
         <GameContext.Provider
-            value={{ winner, games, updatedHistory, dispatch }}
+            value={{ winner, games, updatedHistory, current, handleClick, dispatch }}
         >
-            <div className="game">
-                <div className="game-board">
-                    <Board
-                        squares={current.squares}
-                        onClick={(i) => handleClick(i)}
-                    />
-                </div>
-                <div className="game-info">
-                    <Status />
-                    <Moves />
-                </div>
-            </div>
+            {props.children}
         </GameContext.Provider>
     );
 };
 
-export default Game;
+export default GameStore;

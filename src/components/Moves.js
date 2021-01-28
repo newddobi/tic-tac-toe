@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { GameContext } from "./Game.js";
+import { GameContext } from "./GameStore.js";
 
 const Moves = () => {
     const { updatedHistory, dispatch } = useContext(GameContext);

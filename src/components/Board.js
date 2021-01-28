@@ -1,13 +1,17 @@
-import React from "react";
+import React, { useContext } from "react";
 import Square from "./Square.js";
+import { GameContext } from "./GameStore.js";
 
-const Board = ({ squares, onClick }) => {
+const Board = () => {
+    
+    const { current, handleClick } = useContext(GameContext);
+
     const renderSquare = (i) => {
         return (
             <Square
-                value={squares[i]}
+                value={current.squares[i]}
                 // 괄호를 추가하여 JavaScript가 return 뒤에 세미콜론을 삽입하지 않아도 코드가 깨지지 않는다.
-                onClick={() => onClick(i)}
+                onClick={() => handleClick(i)}
             />
         );
     };
